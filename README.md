@@ -1,25 +1,26 @@
 # firefox-bookmark-history
 
-> 基于Firefox的书签和浏览记录
+> 基于 Firefox 的书签和浏览记录
 
-这是一个使用 **Vue 3 + Vite + TypeScript** 构建的 ZTools 插件。
+一个使用 **Vue 3 + Vite + TypeScript** 构建的 **ZTools** 插件，用于快速搜索并打开 Firefox 浏览器的书签与历史记录，并支持配置 Firefox 配置文件夹。
 
 ## ✨ 功能特性
 
-### 📌 已包含的示例功能
+- **书签** - 搜索并打开 Firefox 书签
+  - 触发指令：`书签` / `bookmark`
+  - 支持按名称、标题、URL 关键字过滤
+  - 键盘导航：`↑` / `↓` 移动选中，`Enter` 打开选中书签，`Home` / `End` 跳到首尾
+  - `Backspace` 删除搜索内容，普通字符键直接输入进搜索框
+  - 单击选中，双击跳转打开书签
 
-- **Hello** - 基础功能指令示例
-  - 触发指令：`你好` / `hello`
-  - 展示简单的 Vue 组件界面
+- **历史** - 浏览 Firefox 历史记录
+  - 触发指令：`历史` / `history`
+  - 需要先配置 Firefox 配置文件夹
 
-- **读文件** - 文件读取功能示例
-  - 功能指令：`读文件`
-  - 匹配指令：支持拖拽文件触发
-  - 演示如何使用 Node.js 能力读取文件内容
-
-- **保存为文件** - 文件写入功能示例
-  - 匹配指令：任意文本/图片 → `保存为文件`
-  - 演示如何将剪贴板内容保存为文件
+- **配置文件夹** - 设置 Firefox 浏览器的配置文件夹
+  - 触发指令：`配置文件夹`
+  - 支持拖拽文件 / 选择文件夹触发
+  - 配置后用于读取书签与历史数据
 
 ## 📁 项目结构
 
@@ -34,13 +35,13 @@
 ├── src/
 │   ├── main.ts               # 入口文件
 │   ├── main.css              # 全局样式
-│   ├── App.vue               # 根组件
-│   ├── env.d.ts              # 类型声明
-│   ├── Hello/                # Hello 功能组件
+│   ├── App.vue               # 根组件（按功能 code 路由）
+│   ├── env.d.ts              # 类型声明（Bookmark / HistoryItem / Window 等）
+│   ├── Bookmark/             # 书签功能组件
 │   │   └── index.vue
-│   ├── Read/                 # 读文件功能组件
+│   ├── History/              # 历史功能组件
 │   │   └── index.vue
-│   └── Write/                # 写文件功能组件
+│   └── Profile/              # 配置文件夹功能组件
 │       └── index.vue
 ├── index.html                # HTML 模板
 ├── vite.config.js            # Vite 配置
@@ -54,91 +55,86 @@
 ### 安装依赖
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 开发模式
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
-开发服务器将在 `http://localhost:5173` 启动。ZTools 会自动加载开发版本。
+开发服务器将在 `http://localhost:5173` 启动，即 `plugin.json` 中 `development.main` 指向的地址。ZTools 会自动加载开发版本。
 
 ### 构建生产版本
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 构建产物将输出到 `dist/` 目录。
 
 ## 📖 开发指南
 
-### 1. 修改插件配置
+### 1. 插件配置
 
-编辑 `public/plugin.json` 文件：
+插件信息与功能入口在 `public/plugin.json` 中声明：
 
 ```json
 {
-  "name": "你的插件名称",
-  "description": "插件描述",
-  "author": "作者名称",
+  "name": "firefox-bookmark-history",
+  "title": "Firefox书签历史",
+  "description": "基于Firefox的书签和浏览记录",
+  "author": "cz-97",
   "version": "1.0.0",
+  "main": "index.html",
+  "preload": "preload/services.js",
+  "logo": "logo.png",
+  "development": {
+    "main": "http://localhost:5173"
+  },
   "features": [
-    // 添加你的功能配置
+    { "code": "bookmark", "explain": "Firefox书签", "icon": "logo.png", "cmds": ["书签", "bookmark"] }
   ]
 }
 ```
 
-### 2. 创建新功能
+`features` 中每个功能的 `code` 会通过 `window.ztools.onPluginEnter` 传入，`src/App.vue` 据此路由到对应组件。
 
-#### 步骤 1: 创建 Vue 组件
+### 2. 添加新功能
 
-在 `src/` 目录下创建新的功能组件：
+#### 创建 Vue 组件
+
+在 `src/` 目录下创建功能组件（如 `src/MyFeature/index.vue`），通过 `defineProps` 接收 `enterAction`：
 
 ```vue
 <!-- src/MyFeature/index.vue -->
-<template>
-  <div class="my-feature">
-    <h1>{{ title }}</h1>
-    <!-- 你的组件内容 -->
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref } from 'vue'
-
-const title = ref('我的新功能')
+const props = defineProps({
+  enterAction: { type: Object, required: true },
+})
 </script>
 
-<style scoped>
-.my-feature {
-  padding: 20px;
-}
-</style>
+<template>
+  <div>我的新功能</div>
+</template>
 ```
 
-#### 步骤 2: 注册路由
+#### 注册路由
 
-在 `src/App.vue` 中添加路由：
+在 `src/App.vue` 中导入组件并按键（路由 code）渲染：
 
 ```vue
-<script setup lang="ts">
 import MyFeature from './MyFeature/index.vue'
-
-const routes = {
-  hello: Hello,
-  read: Read,
-  write: Write,
-  myfeature: MyFeature // 添加新路由
-}
-</script>
 ```
 
-#### 步骤 3: 配置功能
+```vue
+<MyFeature v-if="route === 'myfeature'" :enter-action="enterAction" />
+```
 
-在 `plugin.json` 中添加功能配置：
+#### 配置功能
+
+在 `plugin.json` 的 `features` 中新增：
 
 ```json
 {
@@ -151,82 +147,36 @@ const routes = {
 
 ### 3. 使用 Node.js 能力
 
-#### 扩展 Preload 服务
-
-编辑 `public/preload/services.js`：
+通过 `public/preload/services.js` 扩展服务，然后在组件中通过 `window.services` 调用：
 
 ```javascript
 const fs = require('fs')
 const path = require('path')
 
 module.exports = {
-  // 示例：读取文件
   readFile: (filePath) => {
     return fs.readFileSync(filePath, 'utf-8')
   },
-
-  // 添加你的服务
-  myService: (params) => {
-    // 实现你的逻辑
-    return result
-  }
+  // 其他服务
 }
 ```
 
-#### 在 Vue 组件中调用
-
-```vue
-<script setup lang="ts">
-const handleRead = async () => {
-  try {
-    const content = await window.services.readFile('/path/to/file')
-    console.log(content)
-  } catch (error) {
-    console.error('读取失败:', error)
-  }
-}
-</script>
+```ts
+const content = window.services.readFile('/path/to/file')
 ```
 
 ### 4. 使用 ZTools API
 
-```vue
-<script setup lang="ts">
-// 获取剪贴板内容
-const text = await window.ztools.getClipboardContent()
-
-// 隐藏主窗口
-window.ztools.hideMainWindow()
-
-// 显示提示
-window.ztools.showTip('操作成功')
-
+```ts
+window.ztools.onPluginEnter((action) => {
+  // action.code 为功能 code
+})
+window.ztools.setSubInput((input) => {
+  // 子输入框内容变化
+}, '搜索书签', true)
+window.ztools.subInputBlur()
+window.ztools.subInputFocus()
 // 更多 API 请参考官方文档
-</script>
-```
-
-## 🎨 样式开发
-
-### 使用 CSS 变量
-
-ZTools 提供了一套 CSS 变量用于主题适配：
-
-```css
-.my-component {
-  background: var(--bg-color);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
-}
-```
-
-### 暗色模式支持
-
-```css
-@media (prefers-color-scheme: dark) {
-  .my-component {
-    /* 暗色模式样式 */
-  }
-}
 ```
 
 ## 📦 构建与发布
@@ -234,18 +184,18 @@ ZTools 提供了一套 CSS 变量用于主题适配：
 ### 1. 构建插件
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 ### 2. 测试构建产物
 
-将 `dist/` 目录中的所有文件复制到 ZTools 插件目录进行测试。
+将 `dist/` 目录中的文件放入 ZTools 插件目录进行测试。
 
 ### 3. 发布到插件市场
 
-1. 确保 `plugin.json` 中的信息完整准确
-2. 准备好插件截图和详细说明
-3. 访问 ZTools 插件市场提交插件
+1. 确保 `plugin.json` 中信息完整准确
+2. 准备插件截图与说明
+3. 提交到 ZTools 插件市场
 
 ## 📚 相关资源
 
@@ -256,21 +206,17 @@ npm run build
 
 ## ❓ 常见问题
 
+### Q: 书签/历史显示为空？
+
+确保已通过 `配置文件夹` 功能正确设置 Firefox 配置文件夹，并使用 `窗口.services.getBookmarks()` / `getHistory()` 读取。
+
 ### Q: 如何调试插件？
 
-A: 使用 `npm run dev` 启动开发服务器，在插件界面中点击插件头像图标，在弹出的菜单中选择"打开开发者工具"进行调试。
-
-### Q: 如何访问 Node.js 能力？
-
-A: 通过 `public/preload/services.js` 文件扩展服务，然后在组件中使用 `window.services` 调用。
+使用 `pnpm run dev` 启动开发服务器，在插件界面中选择"打开开发者工具"进行调试。
 
 ### Q: 插件图标不显示？
 
-A: 确保 `public/logo.png` 文件存在，且在 `plugin.json` 中正确配置了 `logo` 字段。
-
-### Q: 如何处理大文件上传？
-
-A: 建议使用 Node.js 流式处理，在 preload 脚本中实现文件分块处理逻辑。
+确保 `public/logo.png` 存在，且在 `plugin.json` 中正确配置了 `logo` 字段。
 
 ## 📄 开源协议
 
