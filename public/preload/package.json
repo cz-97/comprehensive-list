@@ -1,0 +1,6 @@
+{
+  "type": "commonjs",
+  "dependencies": {
+    "better-sqlite3": "^13.0.2"
+  }
+}

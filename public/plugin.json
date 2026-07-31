@@ -1,0 +1,42 @@
+{
+  "$schema": "node_modules/@ztools-center/ztools-api-types/resource/ztools.schema.json",
+  "name": "firefox-bookmark-history",
+  "title": "Firefox书签历史",
+  "description": "基于Firefox的书签和浏览记录",
+  "author": "cz-97",
+  "version": "1.0.0",
+  "main": "index.html",
+  "preload": "preload/services.js",
+  "logo": "logo.png",
+  "development": {
+    "main": "http://localhost:5173"
+  },
+  "features": [
+    {
+      "code": "bookmark",
+      "explain": "Firefox书签",
+      "icon": "logo.png",
+      "cmds": ["书签", "bookmark"]
+    },
+    {
+      "code": "history",
+      "explain": "Firefox历史",
+      "icon": "logo.png",
+      "cmds": ["历史", "history"]
+    },
+    {
+      "code": "profile",
+      "explain": "设置Firefox浏览器的配置文件夹",
+      "icon": "logo.png",
+      "cmds": [
+        "配置文件夹",
+        {
+          "type": "files",
+          "fileType": "file",
+          "maxLength": 1,
+          "label": "配置文件夹"
+        }
+      ]
+    }
+  ]
+}

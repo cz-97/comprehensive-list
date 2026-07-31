@@ -1,0 +1,28 @@
+# 依赖
+node_modules/
+
+# 构建输出
+dist/
+dist-ssr/
+
+# 日志
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 编辑器/OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.local
+
+# 环境变量
+.env
+.env.*
+!.env.example
+
+# 测试覆盖率
+coverage/
