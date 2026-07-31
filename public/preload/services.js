@@ -13,16 +13,13 @@ const bookmarks =`
   where b.type = 1
 `
 const history = `
-  SELECT
-    p.url,
-    p.title,
-    p.visit_count                                                  as 频次,
-    datetime(p.last_visit_date / 1000000, 'unixepoch', '+8 hours') AS 最后访问,
-    p.origin_id as 域名id,
-    o.host as 域名
+  SELECT p.url,
+         p.title,
+         p.visit_count                                                  as 频次,
+         datetime(p.last_visit_date / 1000000, 'unixepoch', '+8 hours') AS 最后访问
   FROM moz_places p
-  left join main.moz_origins o on p.origin_id = o.id
   WHERE visit_count > 0
+    and title is not null
   ORDER BY last_visit_date DESC, visit_count desc
 `
 function getDB() {

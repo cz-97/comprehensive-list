@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from "vue";
+import { buildPinyinIndex, matchesKeyword, type PinyinEntry } from "../utils/pinyin";
 
 defineProps({
     enterAction: {
@@ -10,6 +11,12 @@ defineProps({
 
 // 从服务获取书签和文件夹数据
 const bookmarks: Bookmark[] = window.services.getBookmarks();
+
+// 预计算每个书签的拼音索引（title + page_title 聚合）
+const pinyinIndex = new Map<number, PinyinEntry>();
+for (const b of bookmarks) {
+    pinyinIndex.set(b.id, buildPinyinIndex(`${b.bookmark_title ?? ""} ${b.page_title ?? ""}`));
+}
 
 const keyword = ref(""),
     selectedIndex = ref(0);
@@ -29,16 +36,17 @@ function shouldIgnoreDuplicatedKey(e: KeyboardEvent) {
     return false;
 }
 
-// 过滤逻辑：先按文件夹，再按搜索
+// 过滤逻辑：普通子串 + 拼音全拼/首字母匹配
 const filteredBookmarks = computed(() => {
     let list = bookmarks;
     if (keyword.value.trim()) {
-        const k = keyword.value.trim().toLowerCase();
-        list = list.filter(
-            (b) =>
-                (b.bookmark_title ?? "").toLowerCase().includes(k) ||
-                (b.url ?? "").toLowerCase().includes(k) ||
-                (b.page_title ?? "").toLowerCase().includes(k),
+        const k = keyword.value.trim().toLowerCase().replace(/\s+/g, "");
+        list = list.filter((b) =>
+            matchesKeyword(
+                k,
+                [b.bookmark_title, b.page_title, b.url],
+                pinyinIndex.get(b.id) ?? null,
+            ),
         );
     }
     return list;
@@ -52,7 +60,7 @@ watch(filteredBookmarks, () => {
 
 function scrollSelectedIntoView() {
     nextTick(() => {
-        const el = document.querySelector("tr.selected");
+        const el = document.querySelector(".bookmark-item.selected");
         el?.scrollIntoView({ block: "nearest" });
     });
 }
@@ -183,30 +191,22 @@ window.ztools.setSubInput(onChange, "搜索书签", true);
 
 <template>
     <main class="bookmark-list" tabindex="0" @keydown="onKeydown">
-        <table>
-            <thead>
-                <tr>
-                    <th>名称</th>
-                    <th>标题</th>
-                    <th>URL</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr
-                    v-for="(b, index) in filteredBookmarks"
-                    :key="b.id"
-                    :class="{ selected: index === selectedIndex }"
-                    @click="onRowClick(index)"
-                    @dblclick="onRowDblClick(index)"
-                >
-                    <td>{{ b.bookmark_title }}</td>
-                    <td>{{ b.page_title }}</td>
-                    <td>
-                        <a :href="b.url" target="_blank">{{ b.url }}</a>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <div
+            v-for="(b, index) in filteredBookmarks"
+            :key="b.id"
+            class="bookmark-item"
+            :class="{ selected: index === selectedIndex }"
+            @click="onRowClick(index)"
+            @dblclick="onRowDblClick(index)"
+        >
+            <div class="row-top">
+                <span class="title" :title="b.bookmark_title ?? ''">{{ b.bookmark_title }}</span>
+                <span class="meta">{{ b.page_title }}</span>
+            </div>
+            <div class="row-url">
+                <a :href="b.url ?? undefined" target="_blank">{{ b.url }}</a>
+            </div>
+        </div>
     </main>
 </template>
 
@@ -215,24 +215,58 @@ window.ztools.setSubInput(onChange, "搜索书签", true);
     flex: 1;
     padding: 1rem;
     outline: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    min-width: 0;
 }
-.bookmark-list table {
-    width: 100%;
-    border-collapse: collapse;
+.bookmark-item {
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid #ddd;
+    cursor: pointer;
 }
-.bookmark-list th,
-.bookmark-list td {
-    border: 1px solid #ddd;
-    padding: 0.5rem;
+.bookmark-item.selected {
+    background-color: #4a4b4d;
 }
-.bookmark-list a {
+.row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    line-height: 1.3;
+}
+.title {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.meta {
+    flex-shrink: 0;
+    max-width: 60%;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.78em;
+    color: #999;
+}
+.row-url {
+    margin-top: 0.15rem;
+    line-height: 1.1;
+    font-size: 0.82em;
+    min-width: 0;
+}
+.row-url a {
     color: #43c9ff;
     text-decoration: none;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-.bookmark-list a:hover {
+.row-url a:hover {
     text-decoration: underline;
-}
-.bookmark-list tr.selected {
-    background-color: #4a4b4d;
 }
 </style>

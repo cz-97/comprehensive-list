@@ -22,8 +22,6 @@ declare global {
     title: string | null;          // 页面可能没有标题
     频次: number;                  // visit_count
     最后访问: string;              // 已经格式化为 datetime 字符串
-    域名id: number | null;         // origin_id 可能为空
-    域名: string | null;           // host 可能为空
   }
 }
 
