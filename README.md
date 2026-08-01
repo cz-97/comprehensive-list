@@ -21,50 +21,50 @@
 
 ```
 .
-├── dist/                     # 构建产物（gitignore）
+├── dist/                         # 构建产物（gitignore）
 │   ├── preload/
-│   │   ├── node_modules/     # 预加载脚本依赖
+│   │   ├── node_modules/         # 预加载脚本依赖
 │   │   ├── package.json
 │   │   ├── package-lock.json
 │   │   └── services.js
-│   └── dist.zip              # 打包后的插件压缩包
-├── node_modules/             # 项目依赖
+│   └── dist.zip                  # 打包后的插件压缩包
+├── node_modules/                 # 项目依赖
 ├── public/
-│   ├── logo.png              # 插件图标
-│   ├── plugin.json           # 插件配置文件
-│   |── preload/              # 预加载脚本（开发用）
-│   |    ├── node_modules/     # 预加载脚本依赖
-│   |    ├── package.json
-│   |    ├── package-lock.json
-│   |    └── services.js       # Node.js 服务（数据库查询、文件读取等）
-│   └── scripts/
-│        └── zip.mjs               # 打包脚本
+│   ├── logo.png                  # 插件图标
+│   ├── plugin.json               # 插件配置文件
+│   |── preload/                  # 预加载脚本（开发用）
+│       ├── node_modules/         # 预加载脚本依赖
+│       ├── package.json
+│       ├── package-lock.json
+│       └── services.js           # Node.js 服务（数据库查询、文件读取等）
+│── scripts/
+│   └── zip.mjs                   # 打包脚本
 ├── src/
-│   ├── main.ts               # 入口文件
-│   ├── main.css              # 全局样式
-│   ├── App.vue               # 根组件（按功能 code 路由）
-│   ├── env.d.ts              # 类型声明（Bookmark / HistoryItem 等）
-│   ├── Bookmark/             # 书签功能组件
+│   ├── main.ts                   # 入口文件
+│   ├── main.css                  # 全局样式
+│   ├── App.vue                   # 根组件（按功能 code 路由）
+│   ├── env.d.ts                  # 类型声明（Bookmark / HistoryItem 等）
+│   ├── Bookmark/                 # 书签功能组件
 │   │   └── index.vue
-│   ├── History/              # 历史功能组件
+│   ├── History/                  # 历史功能组件
 │   │   └── index.vue
-│   ├── Profile/              # 配置文件夹功能组件
+│   ├── Profile/                  # 配置文件夹功能组件
 │   │   └── index.vue
-│   ├── styles/               # 样式文件
+│   ├── styles/                   # 样式文件
 │   │   └── search-list.css
-│   ├── assets/               # 静态资源
-│   │   └── default-favicon.png # 默认 favicon
-│   └── utils/                # 工具函数
-│       ├── icons.ts          # 图标工具函数
-│       ├── pinyin.ts         # 拼音工具函数
-│       └── useSearchableList.ts # 搜索列表工具函数
-├── index.html                # HTML 模板
-├── package.json              # 项目依赖与脚本
-├── pnpm-lock.yaml            # pnpm 锁文件
-├── pnpm-workspace.yaml       # pnpm 工作区配置
-├── README.md                 # 项目文档
-├── tsconfig.json             # TypeScript 配置
-└── vite.config.js            # Vite 配置
+│   ├── assets/                   # 静态资源
+│   │   └── default-favicon.png   # 默认 favicon
+│   └── utils/                    # 工具函数
+│       ├── icons.ts              # 图标工具函数
+│       ├── pinyin.ts             # 拼音工具函数
+│       └── useSearchableList.ts  # 搜索列表工具函数
+├── index.html                    # HTML 模板
+├── package.json                  # 项目依赖与脚本
+├── pnpm-lock.yaml                # pnpm 锁文件
+├── pnpm-workspace.yaml           # pnpm 工作区配置
+├── README.md                     # 项目文档
+├── tsconfig.json                 # TypeScript 配置
+└── vite.config.js                # Vite 配置
 ```
 
 ## 🚀 快速开始
