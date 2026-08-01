@@ -52,10 +52,7 @@ const { filtered, selectedIndex, onKeydown, onRowClick, onRowDblClick, keyOf } =
     overflow-x: hidden;
     overflow-y: auto;
     min-width: 0;
-    background:
-        radial-gradient(circle at 14% 0%, rgba(67, 201, 255, 0.13), transparent 30%),
-        radial-gradient(circle at 90% 12%, rgba(141, 255, 122, 0.08), transparent 26%),
-        linear-gradient(180deg, #11151d 0%, #0b0e14 100%);
+    background-color: #0b0e14;
 }
 
 .history-item {
