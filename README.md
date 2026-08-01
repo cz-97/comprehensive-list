@@ -73,6 +73,8 @@
 
 ```bash
 pnpm install
+cd public/preload
+npm install
 ```
 
 ### 开发模式
