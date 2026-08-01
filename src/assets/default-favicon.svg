@@ -1,0 +1,18 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="128" height="128" rx="28" fill="#111827"/>
+  <circle cx="64" cy="64" r="40" fill="url(#glow)" opacity="0.22"/>
+  <circle cx="64" cy="64" r="35" stroke="#43C9FF" stroke-width="5"/>
+  <path d="M29 64H99" stroke="#43C9FF" stroke-width="5" stroke-linecap="round"/>
+  <path d="M64 29C74 39 79 50.5 79 64C79 77.5 74 89 64 99" stroke="#43C9FF" stroke-width="5" stroke-linecap="round"/>
+  <path d="M64 29C54 39 49 50.5 49 64C49 77.5 54 89 64 99" stroke="#43C9FF" stroke-width="5" stroke-linecap="round"/>
+  <path d="M38 43C45.5 48 54 50.5 64 50.5C74 50.5 82.5 48 90 43" stroke="#8DFF7A" stroke-width="4" stroke-linecap="round"/>
+  <path d="M38 85C45.5 80 54 77.5 64 77.5C74 77.5 82.5 80 90 85" stroke="#8DFF7A" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="64" cy="64" r="8" fill="#F4F8FF"/>
+  <circle cx="64" cy="64" r="4" fill="#43C9FF"/>
+  <defs>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(64 64) rotate(90) scale(48)">
+      <stop stop-color="#43C9FF"/>
+      <stop offset="1" stop-color="#43C9FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>

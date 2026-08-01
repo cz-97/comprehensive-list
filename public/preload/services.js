@@ -2,35 +2,42 @@ const Database = require('better-sqlite3');
 const fs = require('node:fs')
 const path = require('node:path')
 
-// 书签 + favicon（favicons.sqlite 通过 ATTACH 关联）
+// 书签 + icon_id（只取 icon id，不带 BLOB；按书签分组去重，避免一个书签命到多个图标而重复）
 const bookmarks = `
   SELECT
     b.id,
     b.title AS bookmark_title,
     p.url,
     p.title AS page_title,
-    i.data
+    MAX(i.id) AS icon_id
   FROM moz_bookmarks b
   LEFT JOIN moz_places p ON b.fk = p.id
   LEFT JOIN favicons.moz_pages_w_icons pw ON pw.page_url_hash = p.url_hash
   LEFT JOIN favicons.moz_icons_to_pages ip ON ip.page_id = pw.id
   LEFT JOIN favicons.moz_icons i ON i.id = ip.icon_id
   WHERE b.type = 1
+  GROUP BY b.id
 `
-// 历史 + favicon
+// 历史 + icon_id（按 place 分组去重，避免一个历史命到多个图标而重复）
 const history = `
-  SELECT p.url,
+  SELECT p.id,
+         p.url,
          p.title,
          p.visit_count                                                 AS 频次,
          datetime(p.last_visit_date / 1000000, 'unixepoch', '+8 hours') AS 最后访问,
-         i.data
+         MAX(i.id)                                                     AS icon_id
   FROM moz_places p
   LEFT JOIN favicons.moz_pages_w_icons pw ON pw.page_url_hash = p.url_hash
   LEFT JOIN favicons.moz_icons_to_pages ip ON ip.page_id = pw.id
   LEFT JOIN favicons.moz_icons i ON i.id = ip.icon_id
   WHERE p.visit_count > 0
     and p.title is not null
-  ORDER BY p.last_visit_date DESC, p.visit_count desc
+  GROUP BY p.id
+  ORDER BY MAX(p.last_visit_date) DESC, MAX(p.visit_count) desc
+`
+// 按 id 增量取图标（id 自增；传上次已加载的最大 id）；icon_url 用于按域名回退匹配
+const iconsSince = `
+  SELECT id, width, icon_url, data FROM favicons.moz_icons WHERE id > ?
 `
 function getDB() {
   const profilePath = window.ztools.dbStorage.getItem("profilePath");
@@ -71,15 +78,6 @@ function toDataUrl(data) {
   return `data:${mime};base64,${b64}`;
 }
 
-// 把查询行里的图标 BLOB 转成 favicon data URL，并去掉原始 BLOB 字段
-function hydrateFavicon(rows) {
-  return (rows || []).map((row) => {
-    const favicon = toDataUrl(row.data);
-    const { data, ...rest } = row;
-    return { ...rest, favicon };
-  });
-}
-
 // 通过 window 对象向渲染进程注入 nodejs 能力
 window.services = {
   // 读文件
@@ -91,18 +89,42 @@ window.services = {
     const db = getDB();
     return db.prepare(sql).all()
   },
-  // 获取书签
+  // 获取书签（只含 icon_id，不含图标 BLOB）
   getBookmarks() {
     const db = getDB();
     const rows = db.prepare(bookmarks).all();
     db.close();
-    return hydrateFavicon(rows);
+    return rows;
   },
-  // 获取历史记录
+  // 获取历史记录（只含 icon_id，不含图标 BLOB）
   getHistory() {
     const db = getDB();
     const rows = db.prepare(history).all();
     db.close();
-    return hydrateFavicon(rows);
+    return rows;
+  },
+  // 增量取回图标，返回 { byId, byDomain, maxId }。
+  // 只取 id > fromId 的新图标（id 自增）；maxId 为本次拉取到的最新 id，供下次继续增量。
+  // byId 按图标 id 索引；byDomain 按域名索引（无关联表记录时按域名回退）。
+  getIcons(fromId = 0) {
+    const db = getDB();
+    const rows = db.prepare(iconsSince).all(fromId);
+    db.close();
+    const byId = {}, byDomain = {};
+    let maxId = fromId;
+    for (const r of rows) {
+      const dataUrl = toDataUrl(r.data);
+      if (!dataUrl) continue;
+      if (r.id > maxId) maxId = r.id;
+      const w = r.width ?? 0;
+      // 按图标 id
+      if (!byId[r.id] || w > byId[r.id].width) byId[r.id] = { width: w, url: dataUrl };
+      // 按域名（从 icon_url 提取 host，去掉 www 前缀）
+      try {
+        const host = new URL(r.icon_url).hostname.replace(/^www\./, '') || '';
+        if (host && (!byDomain[host] || w > byDomain[host].width)) byDomain[host] = { width: w, url: dataUrl };
+      } catch (e) { /* 忽略非法 icon_url */ }
+    }
+    return { byId, byDomain, maxId };
   },
 }

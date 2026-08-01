@@ -16,14 +16,14 @@ declare global {
     bookmark_title: string | null; // 有些书签可能没有标题
     url: string | null;
     page_title: string | null;     // 页面可能没有标题
-    favicon?: string | null;       // 图标 data URL
+    icon_id?: number | null;       // 关联的图标 id
   }
   interface HistoryItem {
     url: string;
     title: string | null;          // 页面可能没有标题
     频次: number;                  // visit_count
     最后访问: string;              // 已经格式化为 datetime 字符串
-    favicon?: string | null;       // 图标 data URL
+    icon_id?: number | null;       // 关联的图标 id
   }
 }
 
