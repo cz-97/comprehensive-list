@@ -106,11 +106,19 @@ export function useSearchableList<T>(o: SearchableListOptions<T>) {
         openIndex(index);
     }
 
-    // 按键去重（focus/blur 切换时同一按键可能触发两次）
+    // 按键去重：宿主在焦点从插件页面切回子输入框时可能重放同一个按键，
+    // 导致同一按键被处理两次。但只有会触发 subInputFocus() 的按键
+    // （可打印字符、Backspace）才会转移焦点，存在被重放的可能；
+    // 方向键等不转移焦点的按键若也去重，会吞掉用户快速连按/按住不放
+    // （浏览器 repeat 间隔通常小于窗口）导致的正常连续输入。
     let lastKey = "";
     let lastKeyTime = 0;
     const DEDUP_MS = 120;
     function shouldIgnoreDuplicatedKey(e: KeyboardEvent) {
+        // 不转移焦点到子输入框的按键（方向键、Enter、Home、End 等）不去重
+        if (e.key.length > 1 && e.key !== "Backspace") return false;
+        // 按住产生的 repeat 事件属于正常连续输入，不去重
+        if (e.repeat) return false;
         const now = Date.now();
         if (e.key === lastKey && now - lastKeyTime < DEDUP_MS) return true;
         lastKey = e.key;
