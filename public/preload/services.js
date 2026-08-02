@@ -78,6 +78,21 @@ function toDataUrl(data) {
   return `data:${mime};base64,${b64}`;
 }
 
+// 字段裁剪：只保留前端需要的字段
+function mapRepos(repos) {
+  return repos.map((r) => ({
+    id: r.id,
+    full_name: r.full_name,
+    name: r.name,
+    description: r.description,
+    html_url: r.html_url,
+    url: r.html_url,
+    language: r.language,
+    stargazers_count: r.stargazers_count,
+    owner: { login: r.owner?.login },
+  }));
+}
+
 // 通过 window 对象向渲染进程注入 nodejs 能力
 window.services = {
   // 读文件
@@ -127,6 +142,19 @@ window.services = {
     }
     return { byId, byDomain, maxId };
   },
+  // 预热到 api.github.com 的连接：进入插件时先发一个不占限额的轻量请求，
+  // 提前完成 DNS + TLS 握手并建立 keep-alive 连接池，首次 F5 拉星标即可复用
+  // 该连接，避免每次重新进插件后第一次请求都要等完整的网络握手而变慢。
+  prewarmGithub() {
+    // 用 /rate_limit 预热连接：不消耗核心 API 限额，返回少量 JSON。
+    // 带上与真实请求相同的 token，走一致的认证路径，避免网络层对未认证请求拦截。
+    const headers = { 'Accept': 'application/vnd.github+json', 'User-Agent': 'firefox-bookmark-history' };
+    const token = window.ztools.dbStorage.getItem("githubToken") || '';
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    return fetch('https://api.github.com/rate_limit', { headers })
+      .then(() => true)
+      .catch(() => false);
+  },
   // 通过 GitHub API 获取用户的所有星标仓库（自动分页，最多 10 页 / 1000 个）。
   // 未认证的 GitHub API 限额 60 次/小时；可设置环境变量 GITHUB_TOKEN 提升到 5000 次/小时。
   async getGithubStars(username) {
@@ -137,30 +165,37 @@ window.services = {
     };
     const token = window.ztools.dbStorage.getItem("githubToken") || '';
     if (token) headers['Authorization'] = 'Bearer ' + token;
-    const repos = [];
-    for (let page = 1; page <= 10; page++) {
-      const url = 'https://api.github.com/users/' + encodeURIComponent(username) +
-        '/starred?per_page=100&page=' + page;
-      const res = await fetch(url, { headers });
-      if (res.status === 404) throw new Error('GitHub 用户不存在: ' + username);
-      if (res.status === 403) throw new Error('GitHub API 限流（rate limit），请稍后再试或配置 GITHUB_TOKEN');
-      if (!res.ok) throw new Error('GitHub API 错误: ' + res.status);
-      const data = await res.json();
-      if (!Array.isArray(data) || data.length === 0) break;
-      repos.push(...data);
-      if (data.length < 100) break;
+  
+    const base = 'https://api.github.com/users/' + encodeURIComponent(username) + '/starred?per_page=100&page=';
+    // 方法一：先请求第 1 页拿到总数，再并行拉剩余页
+    //   - 响应头 Link 里最后的 "page=N&per_page=100>；rel="last" 即总页数，无 N 时用 Link 的 count * per_page 估算
+    let lastPage = 1;
+    const res1 = await fetch(base + '1', { headers });
+    if (res1.status === 404) throw new Error('GitHub 用户不存在: ' + username);
+    if (res1.status === 403) throw new Error('GitHub API 限流（rate limit），请稍后再试或配置 GITHUB_TOKEN');
+    if (!res1.ok) throw new Error('GitHub API 错误: ' + res1.status);
+    const first = await res1.json();
+    if (!Array.isArray(first)) throw new Error('GitHub API 返回异常');
+  
+    // 若第一页不足 100 个，无需后续请求；否则按 Link 头解析总页数
+    if (first.length < 100) {
+      return mapRepos(first);
     }
-    // 只保留前端需要的字段，避免体积过大
-    return repos.map((r) => ({
-      id: r.id,
-      full_name: r.full_name,
-      name: r.name,
-      description: r.description,
-      html_url: r.html_url,
-      url: r.html_url,
-      language: r.language,
-      stargazers_count: r.stargazers_count,
-      owner: { login: r.owner?.login },
-    }));
+    const link = res1.headers.get('link') || '';
+    const m = link.match(/[?&]page=(\d+)>;\s*rel="last"/);
+    if (m) lastPage = Number(m[1]);
+  
+    // 并行拉取剩余页（每页 100），最多 10 页 / 1000 个
+    const pages = [];
+    for (let i = 2; i <= Math.min(lastPage, 10); i++) {
+      pages.push(
+        fetch(base + i, { headers }).then(async (r) => {
+          if (!r.ok) throw new Error('GitHub API 错误: ' + r.status);
+          return r.json();
+        })
+      );
+    }
+    const rest = await Promise.all(pages);
+    return mapRepos([...first, ...rest.flat()]);
   },
 }
