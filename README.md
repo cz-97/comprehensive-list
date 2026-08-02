@@ -36,9 +36,14 @@
 │       ├── node_modules/         # 预加载脚本依赖
 │       ├── package.json
 │       ├── package-lock.json
-│       └── services.js           # Node.js 服务（数据库查询、文件读取等）
+│       ├── src/                  # 预加载源码（db / icon / github / index）
+│       |   ├── index.js          # 入口：组装 window.services
+│       |   ├── db.js             # SQL 语句与数据库连接
+│       |   ├── github.js         # GitHub 星标 API
+│       |   └── icon.js           # 图标 MIME / data URL
+│       └── services.js           # 构建产物（bunx esbuild bundle，勿手改）
 │── scripts/
-│   └── zip.mjs                   # 打包脚本
+│   └── zip.ts                    # 打包脚本（bun）
 ├── src/
 │   ├── main.ts                   # 入口文件
 │   ├── main.css                  # 全局样式
@@ -60,8 +65,7 @@
 │       └── useSearchableList.ts  # 搜索列表工具函数
 ├── index.html                    # HTML 模板
 ├── package.json                  # 项目依赖与脚本
-├── pnpm-lock.yaml                # pnpm 锁文件
-├── pnpm-workspace.yaml           # pnpm 工作区配置
+├── bun.lock                      # bun 锁文件
 ├── README.md                     # 项目文档
 ├── tsconfig.json                 # TypeScript 配置
 └── vite.config.js                # Vite 配置
@@ -72,7 +76,7 @@
 ### 安装依赖
 
 ```bash
-pnpm install
+bun install
 cd public/preload
 npm install
 ```
@@ -80,7 +84,7 @@ npm install
 ### 开发模式
 
 ```bash
-pnpm run dev
+bun run dev
 ```
 
 开发服务器将在 `http://localhost:5173` 启动，即 `plugin.json` 中 `development.main` 指向的地址。ZTools 会自动加载开发版本。
@@ -88,15 +92,26 @@ pnpm run dev
 ### 构建生产版本
 
 ```bash
-pnpm run build
+bun run build
 ```
 
 构建产物将输出到 `dist/` 目录。
 
+### 重新构建预加载脚本
+
+`public/preload/services.js` 是构建产物，切勿直接修改。编辑 `public/preload/src/` 下的源码后，运行：
+
+```bash
+cd public/preload
+npm run build
+```
+
+该命令用 esbuild 将 `src/index.js` bundle 为单文件 `services.js`（`better-sqlite3` 保持外部依赖，运行时从 `node_modules` 解析）。
+
 ### 打包为 ZIP
 
 ```bash
-pnpm run zip
+bun run zip
 ```
 
 将 `dist/dist.zip` 放入 ZTools 插件目录进行测试。
@@ -104,10 +119,10 @@ pnpm run zip
 ### 一键构建并打包
 
 ```bash
-pnpm run pack
+bun run pack
 ```
 
-等价于 `pnpm run build && pnpm run zip`。
+等价于 `bun run build && bun run zip`。
 
 ## 📖 开发指南
 
@@ -220,9 +235,9 @@ window.ztools.subInputFocus();
 
 ## 📦 构建与发布
 
-1. 运行 `pnpm run build` 构建生产版本
+1. 运行 `bun run build` 构建生产版本
 2. 将 `dist/` 中的文件放入 ZTools 插件目录进行测试
-3. 运行 `pnpm run zip` 生成 `dist/dist.zip` 方便分发
+3. 运行 `bun run zip` 生成 `dist/dist.zip` 方便分发
 
 ## 📚 相关资源
 

@@ -1,5 +1,8 @@
 {
   "type": "commonjs",
+  "scripts": {
+    "build": "node ../../node_modules/esbuild/bin/esbuild src/index.js --bundle --platform=node --format=cjs --external:better-sqlite3 --outfile=services.js"
+  },
   "dependencies": {
     "better-sqlite3": "^13.0.2"
   }

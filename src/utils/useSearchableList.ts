@@ -2,8 +2,8 @@ import { ref, computed, watch, nextTick, onMounted } from "vue";
 import { buildPinyinIndex, matchesKeyword, type PinyinEntry } from "./pinyin";
 
 export interface SearchableListOptions<T> {
-    /** 待过滤的数据（一次加载的静态数组） */
-    items: T[];
+    /** 待过滤的数据。可传静态数组，也可传 getter 函数（如 () => repos.value）以响应异步更新。 */
+    items: T[] | (() => T[]);
     /** 每项的唯一 key（用于 v-for :key 和拼音索引） */
     idKey: (item: T) => string | number;
     /** 需要参与拼音匹配的字段文本（用于预计算拼音索引） */
@@ -24,15 +24,18 @@ export function useSearchableList<T>(o: SearchableListOptions<T>) {
     const keyword = ref("");
     const selectedIndex = ref(0);
 
+    // 兼容数组或 getter 函数，统一取当前值
+    const getItems = () => (typeof o.items === "function" ? (o.items as () => T[])() : o.items);
+
     // 预计算拼音索引（仅构建一次）
     const pinyinIndex = new Map<string | number, PinyinEntry>();
-    for (const it of o.items) {
+    for (const it of getItems()) {
         pinyinIndex.set(o.idKey(it), buildPinyinIndex(o.pinyinText(it)));
     }
 
-    // 过滤：普通子串 + 拼音全拼/首字母
+    // 过滤：普通子串 + 拼音全拼/首字母（getter 形式可响应数据更新）
     const filtered = computed(() => {
-        let list = o.items;
+        let list = getItems();
         if (keyword.value.trim()) {
             const k = keyword.value.trim().toLowerCase().replace(/\s+/g, "");
             list = list.filter((it) =>

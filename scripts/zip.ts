@@ -1,11 +1,10 @@
-import { dirname, join, relative, sep } from "node:path";
-import { fileURLToPath } from "node:url";
-import { readdir, readFile, writeFile } from "node:fs/promises";
+// File: scripts/zip.ts
+// 使用 bun 原生 API（Bun.file / Bun.write / Bun.Glob）打包 dist 目录为 dist.zip。
+// 运行：bun run scripts/zip.ts
 import { deflateRawSync } from "node:zlib";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SRC_DIR = join(ROOT, "dist");
-const OUT_FILE = join(ROOT, "dist", "dist.zip");
+const SRC_DIR = "dist";
+const OUT_FILE = "dist/dist.zip";
 
 // ZIP 常量
 const CRC_TABLE = (() => {
@@ -18,7 +17,7 @@ const CRC_TABLE = (() => {
     return t;
 })();
 
-function crc32(buf) {
+function crc32(buf: Uint8Array): number {
     let c = 0xffffffff;
     for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
     return (c ^ 0xffffffff) >>> 0;
@@ -30,26 +29,23 @@ function dosDateTime(d = new Date()) {
     return { time, date };
 }
 
-// 递归收集文件：相对 SRC_DIR 的路径 -> Buffer（跳过输出文件自身）
-async function collectFiles(dir, base, out) {
-    const entries = await readdir(dir, { withFileTypes: true });
-    for (const e of entries) {
-        const abs = join(dir, e.name);
-        const relPath = relative(base, abs).split(sep).join("/");
-        if (relPath === "dist.zip") continue; // 不把上次的产物包含进来
-        if (e.isDirectory()) {
-            await collectFiles(abs, base, out);
-        } else if (e.isFile()) {
-            out.set(relPath, await readFile(abs));
-        }
+// 用 bun 的 Glob 递归收集 dist 下所有文件（跳过输出文件自身），相对路径 -> Uint8Array
+async function collectFiles(): Promise<Map<string, Uint8Array>> {
+    const out = new Map<string, Uint8Array>();
+    for (const path of new Bun.Glob("**/*").scanSync({ cwd: SRC_DIR })) {
+        const abs = `${SRC_DIR}/${path}`;
+        if (path === OUT_FILE.replace(/^dist[\\/]/, "") || path.endsWith("/")) continue;
+        const file = Bun.file(abs);
+        if (await file.exists()) out.set(path, new Uint8Array(await file.arrayBuffer()));
     }
+    return out;
 }
 
-function buildZip(files) {
+function buildZip(files: Map<string, Uint8Array>): Uint8Array {
     const method = 8; // DEFLATE
     const { time, date } = dosDateTime();
-    const localParts = [];
-    const centralParts = [];
+    const localParts: Uint8Array[] = [];
+    const centralParts: Uint8Array[] = [];
     let offset = 0;
 
     for (const [name, data] of files) {
@@ -70,8 +66,7 @@ function buildZip(files) {
         local.writeUInt32LE(data.length, 22); // uncompressed size
         local.writeUInt16LE(nameBuf.length, 26);
         local.writeUInt16LE(0, 28); // extra length
-
-        const localFull = Buffer.concat([local, nameBuf, comp]);
+        localParts.push(Buffer.concat([local, nameBuf, comp]));
 
         const central = Buffer.alloc(46);
         central.writeUInt32LE(0x02014b50, 0); // central directory header signature
@@ -91,10 +86,7 @@ function buildZip(files) {
         central.writeUInt16LE(0, 36); // internal attrs
         central.writeUInt32LE(0x20, 38); // external attrs: archive
         central.writeUInt32LE(offset, 42); // local header offset
-
-        const centralFull = Buffer.concat([central, nameBuf]);
-        localParts.push(localFull);
-        centralParts.push(centralFull);
+        centralParts.push(Buffer.concat([central, nameBuf]));
         offset += localHeaderLen + comp.length;
     }
 
@@ -112,7 +104,8 @@ function buildZip(files) {
     return Buffer.concat([...localParts, centralDir, end]);
 }
 
-const files = new Map();
-await collectFiles(SRC_DIR, SRC_DIR, files);
-await writeFile(OUT_FILE, buildZip(files));
-console.log(`✅ 已打包 ${files.size} 个文件 -> ${relative(ROOT, OUT_FILE)}`);
+const files = await collectFiles();
+const zip = buildZip(files);
+// bun 原生写文件，返回写入字节数
+await Bun.write(OUT_FILE, zip);
+console.log(`✅ 已打包 ${files.size} 个文件 -> ${OUT_FILE}`);

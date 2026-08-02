@@ -13,7 +13,7 @@
     "jsx": "preserve",
     "strict": false,
     "noImplicitAny": false,
-    "types": ["@ztools-center/ztools-api-types"]
+    "types": ["@types/bun", "@ztools-center/ztools-api-types"]
   },
-  "include": ["src"]
+  "include": ["src", "scripts"]
 }

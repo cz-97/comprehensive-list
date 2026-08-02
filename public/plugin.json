@@ -37,6 +37,12 @@
           "label": "配置文件夹"
         }
       ]
+    },
+    {
+      "code": "github-stars",
+      "explain": "查询 GitHub 用户的星标仓库",
+      "icon": "logo.png",
+      "cmds": ["GitHub星标", "github stars", "星标"]
     }
   ]
 }
