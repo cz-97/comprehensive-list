@@ -4,8 +4,6 @@ node_modules/
 # 构建输出
 dist/
 dist-ssr/
-# 预加载 bundle 产物（由 public/preload/src build 生成）
-public/preload/services.js
 
 # 日志
 *.log

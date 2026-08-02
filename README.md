@@ -26,7 +26,7 @@
 │   │   ├── node_modules/         # 预加载脚本依赖
 │   │   ├── package.json
 │   │   ├── package-lock.json
-│   │   └── services.js
+│       └── services.js
 │   └── dist.zip                  # 打包后的插件压缩包
 ├── node_modules/                 # 项目依赖
 ├── public/
@@ -36,12 +36,7 @@
 │       ├── node_modules/         # 预加载脚本依赖
 │       ├── package.json
 │       ├── package-lock.json
-│       ├── src/                  # 预加载源码（db / icon / github / index）
-│       |   ├── index.js          # 入口：组装 window.services
-│       |   ├── db.js             # SQL 语句与数据库连接
-│       |   ├── github.js         # GitHub 星标 API
-│       |   └── icon.js           # 图标 MIME / data URL
-│       └── services.js           # 构建产物（bunx esbuild bundle，勿手改）
+│       └── services.js           # Node.js 服务（数据库查询、文件读取等）
 │── scripts/
 │   └── zip.ts                    # 打包脚本（bun）
 ├── src/
@@ -96,17 +91,6 @@ bun run build
 ```
 
 构建产物将输出到 `dist/` 目录。
-
-### 重新构建预加载脚本
-
-`public/preload/services.js` 是构建产物，切勿直接修改。编辑 `public/preload/src/` 下的源码后，运行：
-
-```bash
-cd public/preload
-npm run build
-```
-
-该命令用 esbuild 将 `src/index.js` bundle 为单文件 `services.js`（`better-sqlite3` 保持外部依赖，运行时从 `node_modules` 解析）。
 
 ### 打包为 ZIP
 
