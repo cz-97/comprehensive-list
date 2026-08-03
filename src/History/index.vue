@@ -1,38 +1,30 @@
 <script setup lang="ts">
-import { useSearchableList } from "../utils/useSearchableList";
+import SearchableList from "../components/SearchableList.vue";
 import { ensureIconsLoaded, iconFor } from "../utils/icons";
-import "../styles/search-list.css";
 
 // 从服务获取历史记录
 const history: HistoryItem[] = window.services.getHistory();
 // 一次性加载全部图标映射（moz_icons 行数很少）
 ensureIconsLoaded();
 
-const { filtered, selectedIndex, onKeydown, onRowClick, onRowDblClick, keyOf } = useSearchableList<HistoryItem>({
-    items: history,
-    idKey: (h) => h.url,
-    pinyinText: (h) => `${h.title ?? ""}`,
-    searchFields: (h) => [h.title, h.url],
-    placeholder: "搜索历史",
-    listClass: "search",
-});
+// 打开行为：打开 URL 并记录
+function open(h: HistoryItem) {
+    window.open(h.url, "_blank");
+}
 </script>
 
 <template>
-    <main
-        class="search-list"
-        style="--accent: #8dff7a"
-        tabindex="0"
-        @keydown="onKeydown"
+    <SearchableList
+        :items="history"
+        :id-key="(h) => h.url"
+        :pinyin-text="(h) => `${h.title ?? ''}`"
+        :search-fields="(h) => [h.title, h.url]"
+        placeholder="搜索历史"
+        list-class="search"
+        accent="#8dff7a"
+        @open="open"
     >
-        <div
-            v-for="(h, index) in filtered"
-            :key="keyOf(h)"
-            class="search-item"
-            :class="{ selected: index === selectedIndex }"
-            @click="onRowClick(index)"
-            @dblclick="onRowDblClick(index)"
-        >
+        <template #default="{ item: h }">
             <img class="favicon" :src="iconFor(h)" alt="" />
             <div class="item-body">
                 <div class="row-top">
@@ -46,6 +38,26 @@ const { filtered, selectedIndex, onKeydown, onRowClick, onRowDblClick, keyOf } =
                     <a :href="h.url" target="_blank">{{ h.url }}</a>
                 </div>
             </div>
-        </div>
-    </main>
+        </template>
+    </SearchableList>
 </template>
+
+<style scoped>
+/* History 私有：频次徽标 + 访问时间 */
+.freq {
+    flex-shrink: 0;
+    border: 1px solid color-mix(in srgb, var(--accent, #8dff7a) 30%, transparent);
+    border-radius: 999px;
+    padding: 0.16rem 0.45rem;
+    color: #b8ffad;
+    background: color-mix(in srgb, var(--accent, #8dff7a) 10%, transparent);
+    font-weight: 700;
+}
+
+.time {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+</style>

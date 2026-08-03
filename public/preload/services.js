@@ -86,7 +86,6 @@ function mapRepos(repos) {
     name: r.name,
     description: r.description,
     html_url: r.html_url,
-    url: r.html_url,
     language: r.language,
     stargazers_count: r.stargazers_count,
     owner: { login: r.owner?.login },

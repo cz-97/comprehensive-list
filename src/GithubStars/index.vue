@@ -1,10 +1,9 @@
 <!--
-根据 GitHub 用户名查询该用户的所有星标仓库（复用 useSearchableList 列表逻辑与 search-list.css 样式）。
+根据 GitHub 用户名查询该用户的所有星标仓库（复用 SearchableList 组件）。
 -->
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useSearchableList } from "../utils/useSearchableList";
-import "../styles/search-list.css";
+import SearchableList from "../components/SearchableList.vue";
 
 interface StarredRepo {
     id: number;
@@ -12,7 +11,6 @@ interface StarredRepo {
     name: string;
     description: string | null;
     html_url: string;
-    url: string;
     language: string | null;
     stargazers_count: number;
     owner: { login: string };
@@ -101,51 +99,44 @@ async function loadStars(name: string) {
     }
 }
 
-// 复用书签的搜索列表逻辑
-const { filtered, selectedIndex, onKeydown, onRowClick, onRowDblClick, keyOf } = useSearchableList<StarredRepo>({
-    items: () => repos.value,
-    idKey: (r) => r.id,
-    pinyinText: (r) => `${r.name} ${r.description ?? ""}`,
-    searchFields: (r) => [r.name, r.description, r.language],
-    placeholder: "搜索星标仓库",
-    listClass: "search",
-});
+// 响应式数据 getter（传给 SearchableList 以支持异步更新）
+const reposGetter = () => repos.value;
+
+// 打开行为：打开仓库页面并记录
+function open(r: StarredRepo) {
+    if (r.html_url) window.open(r.html_url, "_blank");
+}
 </script>
 
 <template>
     <div class="gs-root">
-        <main
-            class="search-list"
-            style="--accent: #43c9ff"
-            tabindex="0"
-            @keydown="onKeydown"
-            @keydown.f5.prevent="onF5Refresh"
+        <SearchableList
+            :items="reposGetter"
+            :id-key="(r) => r.id"
+            :pinyin-text="(r) => `${r.name} ${r.description ?? ''}`"
+            :search-fields="(r) => [r.name, r.description, r.language]"
+            placeholder="搜索星标仓库"
+            list-class="search"
+            accent="yellow"
+            :extra-keydown="onF5Refresh"
+            @open="open"
         >
-            <template v-if="filtered.length">
-                <div
-                    v-for="(r, index) in filtered"
-                    :key="keyOf(r)"
-                    class="search-item"
-                    :class="{ selected: index === selectedIndex }"
-                    @click="onRowClick(index)"
-                    @dblclick="onRowDblClick(index)"
-                >
-                    <div class="item-body">
-                        <div class="row-top">
-                            <span class="title" :title="r.full_name">{{ r.full_name }}</span>
-                            <span class="meta" v-if="r.language">{{ r.language }}</span>
-                        </div>
-                        <div class="row-url">
-                            <span class="gs-stars">★ {{ r.stargazers_count }}</span>
-                            <span class="gs-desc">{{ r.description }}</span>
-                        </div>
+            <template #default="{ item: r }">
+                <div class="item-body">
+                    <div class="row-top">
+                        <span class="title" :title="r.full_name">{{ r.full_name }}</span>
+                        <span class="meta" v-if="r.language">{{ r.language }}</span>
+                    </div>
+                    <div class="row-url">
+                        <span class="gs-stars">★ {{ r.stargazers_count }}</span>
+                        <span class="gs-desc">{{ r.description }}</span>
                     </div>
                 </div>
             </template>
-            <template v-else>
+            <template #empty>
                 <div class="gs-empty">{{ loading ? "查询中…" : error || "暂无数据" }}</div>
             </template>
-        </main>
+        </SearchableList>
         <!-- F5 刷新时的纯显示蒙层：只遮罩提示，不拦截鼠标事件、不影响下方列表操作 -->
         <div v-if="loading" class="gs-overlay">
             <span class="gs-overlay-text">刷新中…</span>

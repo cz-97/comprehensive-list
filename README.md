@@ -50,8 +50,8 @@
 │   │   └── index.vue
 │   ├── Profile/                  # 配置文件夹功能组件
 │   │   └── index.vue
-│   ├── styles/                   # 样式文件
-│   │   └── search-list.css
+│   ├── components/               # 复用组件
+│   │   └── SearchableList.vue    # 可搜索列表（含 scoped 骨架样式）
 │   ├── assets/                   # 静态资源
 │   │   └── default-favicon.png   # 默认 favicon
 │   └── utils/                    # 工具函数
