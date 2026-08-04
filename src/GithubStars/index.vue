@@ -57,7 +57,7 @@ onMounted(() => {
     if (cached && cached.length) {
         repos.value = cached;
     } else {
-        error.value = "暂无缓存，请按 F5 从 GitHub 拉取";
+        error.value = "暂无缓存，自动拉取中";
     }
     // 后台静默刷新：预热连接并更新缓存，不阻塞、失败不影响当前显示的缓存
     refreshInBackground(saved.trim());
