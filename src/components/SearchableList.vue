@@ -32,6 +32,8 @@ const props = withDefaults(
         accent?: string;
         /** 附加 keydown 处理（如 F5 刷新），在列表带焦点时叠加触发 */
         extraKeydown?: (e: KeyboardEvent) => void;
+        /** open行为 */
+        open: (item: T) => void;
     }>(),
     {
         placeholder: "关键字",
@@ -40,10 +42,6 @@ const props = withDefaults(
         extraKeydown: undefined,
     },
 );
-
-const emit = defineEmits<{
-    open: [T];
-}>();
 
 // 兼容数组或 getter 函数，统一取当前值
 const getItems = () =>
@@ -102,7 +100,7 @@ onMounted(() => {
 // 触发打开指定下标项（具体打开行为由应用组件在 @open 中定义）
 function openIndex(index: number) {
     const it = filtered.value[index];
-    if (it) emit("open", it);
+    if (it) props.open(it);
 }
 
 function onEnter() {

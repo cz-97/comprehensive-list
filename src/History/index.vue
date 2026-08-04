@@ -22,7 +22,7 @@ function open(h: HistoryItem) {
         placeholder="搜索历史"
         list-class="search"
         accent="#43c9ff"
-        @open="open"
+        :open="open"
     >
         <template #default="{ item: h }">
             <img class="favicon" :src="iconFor(h)" alt="" />

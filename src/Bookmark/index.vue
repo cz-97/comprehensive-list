@@ -22,7 +22,7 @@ function open(b: Bookmark) {
         placeholder="搜索书签"
         list-class="search"
         accent="#8dff7a"
-        @open="open"
+        :open="open"
     >
         <template #default="{ item: b }">
             <img class="favicon" :src="iconFor(b)" alt="" />

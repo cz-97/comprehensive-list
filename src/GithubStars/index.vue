@@ -119,7 +119,7 @@ function open(r: StarredRepo) {
             list-class="search"
             accent="yellow"
             :extra-keydown="onF5Refresh"
-            @open="open"
+            :open="open"
         >
             <template #default="{ item: r }">
                 <div class="item-body">
