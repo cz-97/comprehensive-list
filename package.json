@@ -1,7 +1,7 @@
 {
-  "name": "firefox-bookmark-history",
+  "name": "comprehensive-list",
   "version": "1.0.0",
-  "description": "基于Firefox的书签和浏览记录",
+  "description": "综合列表插件",
   "type": "module",
   "scripts": {
     "dev": "bun x vite",

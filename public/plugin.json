@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@ztools-center/ztools-api-types/resource/ztools.schema.json",
-  "name": "firefox-bookmark-history",
-  "title": "Firefox书签历史",
-  "description": "基于Firefox的书签和浏览记录",
+  "name": "comprehensive-list",
+  "title": "综合列表",
+  "description": "综合列表插件",
   "author": "cz-97",
   "version": "1.0.0",
   "main": "index.html",

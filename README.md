@@ -1,6 +1,6 @@
-# Firefox Bookmark History
+# Comprehensive List
 
-> 基于 Firefox 书签和浏览记录的 ZTools 插件，支持快速搜索与打开书签、浏览历史，以及配置 Firefox 配置文件文件夹。
+> 综合列表 ZTools 插件，目前支持 Firefox 书签、浏览历史、配置文件夹，以及 GitHub 星标仓库的查询。
 
 ## ✨ 功能特性
 
@@ -9,6 +9,7 @@
 | **书签**       | `书签` / `bookmark` | 搜索并打开 Firefox 书签，支持关键字过滤             |
 | **历史**       | `历史` / `history`  | 浏览 Firefox 历史记录，需先配置配置文件文件夹       |
 | **配置文件夹** | `配置文件夹`        | 设置 Firefox 浏览器的配置文件夹路径，支持拖拽或选择 |
+| **GitHub 星标** | `GitHub星标` / `github stars` / `星标` | 查询 GitHub 用户的星标仓库 |
 
 ### 书签功能
 
