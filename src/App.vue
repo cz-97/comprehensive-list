@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import Hello from './Bookmark/index.vue'
 import History from './History/index.vue'
-import Profile from './Profile/index.vue'
+import Profile from './Setting/index.vue'
 import GithubStars from './GithubStars/index.vue'
 
 const route = ref('')
@@ -22,6 +22,6 @@ onMounted(() => {
 <template>
   <Hello v-if="route === 'bookmark'" :enter-action="enterAction" />
   <History v-if="route === 'history'" :enter-action="enterAction" />
-  <Profile v-if="route === 'profile'" :enter-action="enterAction" />
+  <Profile v-if="route === 'setting'" :enter-action="enterAction" />
   <GithubStars v-if="route === 'github-stars'" />
 </template>
