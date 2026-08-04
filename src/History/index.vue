@@ -21,7 +21,7 @@ function open(h: HistoryItem) {
         :search-fields="(h) => [h.title, h.url]"
         placeholder="搜索历史"
         list-class="search"
-        accent="#8dff7a"
+        accent="#43c9ff"
         @open="open"
     >
         <template #default="{ item: h }">

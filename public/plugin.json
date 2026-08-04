@@ -15,20 +15,28 @@
     {
       "code": "bookmark",
       "explain": "Firefox书签",
-      "icon": "logo.png",
-      "cmds": ["书签", "bookmark"]
+      "icon": "bookmark.svg",
+      "cmds": [
+        "书签",
+        "bookmark"
+      ]
     },
     {
       "code": "history",
       "explain": "Firefox历史",
-      "icon": "logo.png",
-      "cmds": ["历史", "history"]
+      "icon": "history.svg",
+      "cmds": [
+        "历史",
+        "history"
+      ]
     },
     {
-      "code": "profile",
-      "explain": "设置Firefox浏览器的配置文件夹",
-      "icon": "logo.png",
+      "code": "setting",
+      "explain": "插件设置（浏览器配置、GitHub 信息等）",
+      "icon": "setting.svg",
       "cmds": [
+        "设置",
+        "settings",
         "配置文件夹",
         {
           "type": "files",
@@ -41,8 +49,12 @@
     {
       "code": "github-stars",
       "explain": "查询 GitHub 用户的星标仓库",
-      "icon": "logo.png",
-      "cmds": ["GitHub星标", "github stars", "星标"]
+      "icon": "github-stars.svg",
+      "cmds": [
+        "GitHub星标",
+        "github stars",
+        "星标"
+      ]
     }
   ]
 }

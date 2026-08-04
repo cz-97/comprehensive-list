@@ -21,7 +21,7 @@ function open(b: Bookmark) {
         :search-fields="(b) => [b.bookmark_title, b.page_title, b.url]"
         placeholder="搜索书签"
         list-class="search"
-        accent="#43c9ff"
+        accent="#8dff7a"
         @open="open"
     >
         <template #default="{ item: b }">

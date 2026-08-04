@@ -1,6 +1,6 @@
 # Comprehensive List
 
-> 综合列表 ZTools 插件，目前支持 Firefox 书签、浏览历史、配置文件夹，以及 GitHub 星标仓库的查询。
+> 综合列表 ZTools 插件，目前支持 Firefox 书签、浏览历史和 GitHub 星标仓库的查询；插件设置页用于集中配置各功能所需的信息，并可随功能扩展。
 
 ## ✨ 功能特性
 
@@ -8,7 +8,7 @@
 | -------------- | ------------------- | --------------------------------------------------- |
 | **书签**       | `书签` / `bookmark` | 搜索并打开 Firefox 书签，支持关键字过滤             |
 | **历史**       | `历史` / `history`  | 浏览 Firefox 历史记录，需先配置配置文件文件夹       |
-| **配置文件夹** | `配置文件夹`        | 设置 Firefox 浏览器的配置文件夹路径，支持拖拽或选择 |
+| **插件设置** | `设置` / `settings` / `配置文件夹` | 集中配置浏览器配置文件夹、GitHub 信息等功能设置，并可随功能扩展 |
 | **GitHub 星标** | `GitHub星标` / `github stars` / `星标` | 查询 GitHub 用户的星标仓库 |
 
 ### 书签功能
@@ -49,7 +49,7 @@
 │   │   └── index.vue
 │   ├── History/                  # 历史功能组件
 │   │   └── index.vue
-│   ├── Profile/                  # 配置文件夹功能组件
+│   ├── Setting/                  # 插件设置组件
 │   │   └── index.vue
 │   ├── components/               # 复用组件
 │   │   └── SearchableList.vue    # 可搜索列表（含 scoped 骨架样式）
@@ -235,7 +235,7 @@ window.ztools.subInputFocus();
 
 ### Q: 书签/历史显示为空？
 
-确保已通过 `配置文件夹` 功能正确设置 Firefox 配置文件夹，并使用 `window.services.getBookmarks()` / `getHistory()` 读取数据。
+确保已通过 `设置` 功能正确配置需要读取的浏览器配置文件夹，并使用 `window.services.getBookmarks()` / `getHistory()` 读取数据。
 
 ### Q: 图标不显示？
 
