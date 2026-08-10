@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import SearchableList from "../components/SearchableList.vue";
 import { ensureIconsLoaded, iconFor } from "../utils/icons";
+import "../styles/search-list.css";
 
 // 从服务获取书签和文件夹数据
 const bookmarks: Bookmark[] = window.services.getBookmarks();
@@ -31,7 +32,7 @@ function open(b: Bookmark) {
                     <span class="title" :title="b.bookmark_title ?? ''">{{ b.bookmark_title }}</span>
                     <span class="meta">{{ b.page_title }}</span>
                 </div>
-                <div class="row-url">
+                <div class="row-bottom">
                     <a :href="b.url ?? undefined" target="_blank">{{ b.url }}</a>
                 </div>
             </div>

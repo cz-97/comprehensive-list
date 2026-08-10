@@ -1,0 +1,82 @@
+/* 书签 / 历史行内容通用样式（由各视图组件引入；主题色通过 --accent 变量区分） */
+
+.favicon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    object-fit: contain;
+    border-radius: 6px;
+    padding: 3px;
+}
+
+.item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    line-height: 1.35;
+}
+
+.title {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #f4f8ff;
+    font-size: 1rem;
+    font-weight: 650;
+}
+
+.meta {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 45%;
+    min-width: 0;
+    font-size: 0.78em;
+    color: #9aa7b8;
+}
+
+.row-bottom {
+    margin-top: 0.2rem;
+    line-height: 1.2;
+    font-size: 0.84em;
+    min-width: 0;
+}
+
+.row-bottom a {
+    color: #43c9ff;
+    text-decoration: none;
+    display: inline-block;
+    max-width: 100%;
+    vertical-align: top;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.row-bottom a:hover {
+    color: #7fe3ff;
+    text-decoration: underline;
+}
+
+@media (max-width: 720px) {
+    .row-top {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.28rem;
+    }
+
+    .meta {
+        max-width: 100%;
+    }
+}

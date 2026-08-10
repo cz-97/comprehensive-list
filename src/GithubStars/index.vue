@@ -4,6 +4,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import SearchableList from "../components/SearchableList.vue";
+import "../styles/search-list.css";
 
 interface StarredRepo {
     id: number;
@@ -127,7 +128,7 @@ function open(r: StarredRepo) {
                         <span class="title" :title="r.full_name">{{ r.full_name }}</span>
                         <span class="meta" v-if="r.language">{{ r.language }}</span>
                     </div>
-                    <div class="row-url">
+                    <div class="row-bottom">
                         <span class="gs-stars">★ {{ r.stargazers_count }}</span>
                         <span class="gs-desc">{{ r.description }}</span>
                     </div>

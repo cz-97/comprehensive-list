@@ -258,7 +258,7 @@ defineExpose({
 </template>
 
 <style scoped>
-/* SearchableList 通用骨架样式（scoped；slot 内的个性化 class 用 :deep 命中） */
+/* SearchableList 通用骨架样式（scoped；slot 内容样式见 ../styles/search-list.css） */
 
 .search-list {
     flex: 1;
@@ -320,76 +320,6 @@ defineExpose({
         0 16px 36px rgba(0, 0, 0, 0.32);
 }
 
-/* slot 内容（父组件作用域）内的通用骨架 class，用 :deep 穿透命中 */
-:deep(.favicon) {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-    object-fit: contain;
-    border-radius: 6px;
-    padding: 3px;
-}
-
-:deep(.item-body) {
-    flex: 1;
-    min-width: 0;
-}
-
-:deep(.row-top) {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.75rem;
-    min-width: 0;
-    line-height: 1.35;
-}
-
-:deep(.title) {
-    flex: 1;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: #f4f8ff;
-    font-size: 1rem;
-    font-weight: 650;
-}
-
-:deep(.meta) {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    max-width: 45%;
-    min-width: 0;
-    font-size: 0.78em;
-    color: #9aa7b8;
-}
-
-:deep(.row-url) {
-    margin-top: 0.2rem;
-    line-height: 1.2;
-    font-size: 0.84em;
-    min-width: 0;
-}
-
-:deep(.row-url a) {
-    color: #43c9ff;
-    text-decoration: none;
-    display: inline-block;
-    max-width: 100%;
-    vertical-align: top;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: pointer;
-}
-
-:deep(.row-url a:hover) {
-    color: #7fe3ff;
-    text-decoration: underline;
-}
-
 @media (max-width: 720px) {
     .search-list {
         padding: 0.75rem;
@@ -398,16 +328,6 @@ defineExpose({
     .search-item {
         align-items: flex-start;
         padding: 0.7rem;
-    }
-
-    :deep(.row-top) {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 0.28rem;
-    }
-
-    :deep(.meta) {
-        max-width: 100%;
     }
 }
 </style>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import SearchableList from "../components/SearchableList.vue";
 import { ensureIconsLoaded, iconFor } from "../utils/icons";
+import "../styles/search-list.css";
 
 // 从服务获取历史记录
 const history: HistoryItem[] = window.services.getHistory();
@@ -34,7 +35,7 @@ function open(h: HistoryItem) {
                         <span class="time" v-if="h.最后访问">{{ h.最后访问 }}</span>
                     </span>
                 </div>
-                <div class="row-url">
+                <div class="row-bottom">
                     <a :href="h.url" target="_blank">{{ h.url }}</a>
                 </div>
             </div>
