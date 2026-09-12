@@ -10,6 +10,7 @@
 | **历史**       | `历史` / `history`  | 浏览 Firefox 历史记录，需先配置配置文件文件夹       |
 | **插件设置** | `设置` / `settings` / `配置文件夹` | 集中配置浏览器配置文件夹、GitHub 信息等功能设置，并可随功能扩展 |
 | **GitHub 星标** | `GitHub星标` / `github stars` / `星标` | 查询 GitHub 用户的星标仓库 |
+| **GitHub 搜索** | `GitHub搜索` / `github search` / `搜索仓库` + 关键词 | 进入后输入关键词，**按回车**搜索 GitHub 仓库（默认按 star 数降序） |
 
 ### 书签功能
 
@@ -48,6 +49,10 @@
 │   ├── Bookmark/                 # 书签功能组件
 │   │   └── index.vue
 │   ├── History/                  # 历史功能组件
+│   │   └── index.vue
+│   ├── GithubStars/              # GitHub 星标功能组件
+│   │   └── index.vue
+│   ├── GithubSearch/             # GitHub 关键词搜索功能组件
 │   │   └── index.vue
 │   ├── Setting/                  # 插件设置组件
 │   │   └── index.vue
@@ -199,6 +204,9 @@ const content = window.services.readFile("/path/to/file");
 | `getBookmarks()`    | 获取书签列表（含 `icon_id`，不含 BLOB）        |
 | `getHistory()`      | 获取历史记录列表（含 `icon_id`，不含 BLOB）    |
 | `getIcons(fromId?)` | 增量获取图标，返回 `{ byId, byDomain, maxId }` |
+| `prewarmGithub()`    | 预热 GitHub API 连接（不消耗限额）             |
+| `getGithubStars(username)` | 获取用户星标仓库（自动分页，最多 1000 个） |
+| `searchGithubRepos(keyword, options?)` | 按关键词搜索仓库，`options` 支持 `perPage` / `sort` |
 
 ### 4. 使用 ZTools API
 

@@ -55,6 +55,21 @@
         "github stars",
         "星标"
       ]
+    },
+    {
+      "code": "github-search",
+      "explain": "输入关键词后按回车搜索 GitHub 仓库",
+      "icon": "github-search.svg",
+      "cmds": [
+        "GitHub搜索",
+        "github search",
+        "搜索仓库",
+        {
+          "type": "over",
+          "label": "搜索关键词",
+          "minLength": 1
+        }
+      ]
     }
   ]
 }

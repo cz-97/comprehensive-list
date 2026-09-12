@@ -78,6 +78,17 @@ function toDataUrl(data) {
   return `data:${mime};base64,${b64}`;
 }
 
+// GitHub 请求头：统一的认证路径（Accept + User-Agent + 可选的 Token）
+function githubHeaders() {
+  const headers = {
+    'Accept': 'application/vnd.github+json',
+    'User-Agent': 'firefox-bookmark-history',
+  };
+  const token = window.ztools.dbStorage.getItem("githubToken") || '';
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  return headers;
+}
+
 // 字段裁剪：只保留前端需要的字段
 function mapRepos(repos) {
   return repos.map((r) => ({
@@ -147,10 +158,7 @@ window.services = {
   prewarmGithub() {
     // 用 /rate_limit 预热连接：不消耗核心 API 限额，返回少量 JSON。
     // 带上与真实请求相同的 token，走一致的认证路径，避免网络层对未认证请求拦截。
-    const headers = { 'Accept': 'application/vnd.github+json', 'User-Agent': 'firefox-bookmark-history' };
-    const token = window.ztools.dbStorage.getItem("githubToken") || '';
-    if (token) headers['Authorization'] = 'Bearer ' + token;
-    return fetch('https://api.github.com/rate_limit', { headers })
+    return fetch('https://api.github.com/rate_limit', { headers: githubHeaders() })
       .then(() => true)
       .catch(() => false);
   },
@@ -158,12 +166,7 @@ window.services = {
   // 未认证的 GitHub API 限额 60 次/小时；可设置环境变量 GITHUB_TOKEN 提升到 5000 次/小时。
   async getGithubStars(username) {
     if (!username) throw new Error('缺少 GitHub 用户名');
-    const headers = {
-      'Accept': 'application/vnd.github+json',
-      'User-Agent': 'firefox-bookmark-history',
-    };
-    const token = window.ztools.dbStorage.getItem("githubToken") || '';
-    if (token) headers['Authorization'] = 'Bearer ' + token;
+    const headers = githubHeaders();
   
     const base = 'https://api.github.com/users/' + encodeURIComponent(username) + '/starred?per_page=100&page=';
     // 方法一：先请求第 1 页拿到总数，再并行拉剩余页
@@ -196,5 +199,24 @@ window.services = {
     }
     const rest = await Promise.all(pages);
     return mapRepos([...first, ...rest.flat()]);
+  },
+  // 通过 GitHub 搜索 API 按关键词搜索仓库，默认按 star 数降序返回前 50 条，
+  // 返回字段与 getGithubStars 一致（见 mapRepos）。
+  // 搜索接口未认证限额 10 次/分钟，配置 GitHub Token 可提升到 30 次/分钟。
+  async searchGithubRepos(keyword, options = {}) {
+    const q = (keyword ?? '').trim();
+    if (!q) throw new Error('缺少搜索关键词');
+    const perPage = Math.min(Number(options.perPage) || 50, 100);
+    const sort = options.sort || 'stars';
+    const url = 'https://api.github.com/search/repositories?q=' + encodeURIComponent(q)
+      + '&sort=' + encodeURIComponent(sort) + '&order=desc&per_page=' + perPage;
+
+    const res = await fetch(url, { headers: githubHeaders() });
+    if (res.status === 422) throw new Error('搜索关键词无效: ' + q);
+    if (res.status === 403) throw new Error('GitHub API 限流（rate limit），请稍后再试或配置 GITHUB_TOKEN');
+    if (!res.ok) throw new Error('GitHub API 错误: ' + res.status);
+    const data = await res.json();
+    if (!data || !Array.isArray(data.items)) throw new Error('GitHub API 返回异常');
+    return mapRepos(data.items);
   },
 }

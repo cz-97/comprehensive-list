@@ -26,3 +26,5 @@ pnpm-debug.log*
 
 # 测试覆盖率
 coverage/
+
+.workbuddy

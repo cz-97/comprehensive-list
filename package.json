@@ -4,8 +4,8 @@
   "description": "综合列表插件",
   "type": "module",
   "scripts": {
-    "dev": "bun x vite",
-    "build": "bun x vue-tsc && bun x vite build",
+    "dev": "bunx vite",
+    "build": "bunx vue-tsc && bunx vite build",
     "zip": "bun run scripts/zip.ts",
     "pack": "bun run build && bun run zip"
   },

@@ -26,6 +26,8 @@ const props = withDefaults(
         searchFields: (item: T) => (string | null | undefined)[];
         /** 子输入框占位符 */
         placeholder?: string;
+        /** 初始关键词（进入时预填子输入框，不触发搜索） */
+        initialKeyword?: string;
         /** 列表 class 前缀（默认 "search" -> ".search-list"/".search-item"） */
         listClass?: string;
         /** --accent 强调色 */
@@ -37,6 +39,7 @@ const props = withDefaults(
     }>(),
     {
         placeholder: "关键字",
+        initialKeyword: "",
         listClass: "search",
         accent: "white",
         extraKeydown: undefined,
@@ -47,7 +50,7 @@ const props = withDefaults(
 const getItems = () =>
     typeof props.items === "function" ? props.items() : props.items;
 
-const keyword = ref("");
+const keyword = ref(props.initialKeyword ?? "");
 const selectedIndex = ref(0);
 
 // 预计算拼音索引（仅构建一次）
@@ -160,8 +163,9 @@ function shouldIgnoreDuplicatedKey(e: KeyboardEvent) {
 }
 
 function onKeydown(e: KeyboardEvent) {
-    // 先执行附加的 keydown 处理（如 F5），不拦截正常按键
+    // 先执行附加的 keydown 处理（如 F5 刷新、回车搜索），若其已消费该按键则不再处理
     props.extraKeydown?.(e);
+    if (e.defaultPrevented) return;
     if (shouldIgnoreDuplicatedKey(e)) return;
 
     switch (e.key) {
@@ -219,6 +223,8 @@ function onChange(input: { text: string }) {
     selectedIndex.value = 0;
 }
 window.ztools.setSubInput(onChange, props.placeholder, true);
+// 预填初始关键词到子输入框（仅填充，不触发搜索）
+if (keyword.value) window.ztools.setSubInputValue(keyword.value);
 
 defineExpose({
     keyword,
