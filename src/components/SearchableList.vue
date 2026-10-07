@@ -1,6 +1,8 @@
 <!--
 通用可搜索、可键盘导航列表组件（抽象自 useSearchableList）：
-- 拼音/子串过滤、↑↓/Home/End/Enter/Backspace 处理、选中、click/dblclick 打开、进入自动聚焦
+- 拼音/子串过滤、↑↓/Home/End/Enter/Backspace 处理、选中、click/dblclick 打开
+- 焦点跟随按键切换：进入时列表持有焦点（可直接 ↑↓ 导航），
+  在列表里按下可打印字符时把该字符「移交」回宿主子输入框并交还焦点
 - 通过 scoped slot 渲染每一行，通过 #empty 渲染空态
 -->
 <script setup lang="ts" generic="T">
@@ -88,7 +90,81 @@ function scrollSelectedIntoView() {
     });
 }
 
-// 进入时让主应用（列表）获得焦点
+// 列表元素当前是否持有 DOM 焦点（= 用户在列表区域操作，而非在宿主子输入框里输入）
+function hasListFocus() {
+    const el = document.querySelector(
+        `.${props.listClass}-list`,
+    ) as HTMLElement | null;
+    return !!el && document.activeElement === el;
+}
+
+// 焦点交还子输入框后，宿主需要一点时间完成真正的 DOM focus，
+// 立即重放按键会被子输入框之前的焦点（列表）吞掉。
+const FOCUS_HANDOFF_DELAY = 20;
+
+// 重放按键的冷却时间：宿主可能把系统级注入的按键再回送给插件页面，
+// 若此刻列表仍持有焦点，会形成「转发 → 重放 → 回送 → 再转发」的死循环，
+// 因此转发后一段时间内不再重复转发。
+const FORWARD_COOLDOWN = 300;
+let lastForwardKey = "";
+let lastForwardTime = 0;
+
+// 把宿主按键名（DOM KeyboardEvent.key）映射为 simulateKeyboardTap 认识的键名。
+// 宿主原生层只认 'a'~'z'、'0'~'9'、符号键与 left/right/up/down/space/return 等，
+// 字母大小写靠 shift 修饰键表达，而不是直接传大写。
+function toHostTapKey(key: string): { key: string; shift: boolean } | null {
+    // 空格
+    if (key === " " || key === "Spacebar") return { key: "space", shift: false };
+    if (key.length !== 1) return null;
+    // 小写字母
+    if (key >= "a" && key <= "z") return { key, shift: false };
+    // 大写字母 -> 小写 + shift
+    if (key >= "A" && key <= "Z")
+        return { key: key.toLowerCase(), shift: true };
+    // 数字与符号：原样传递（shift 组合键已在事件里消费，不重复表达）
+    if (/^[0-9\-=[\]\\;',./`]$/.test(key)) return { key, shift: false };
+    return null;
+}
+
+// 焦点在列表时按下可打印字符：把焦点交还子输入框，并让该字符重新走一遍输入法。
+//
+// 为什么不能直接 setSubInputValue：那是直接改文本，绕过了输入法，
+// 中文输入法只从第二个字母开始组字（输入 zh 的候选里没有 z 开头的结果）。
+// 正确做法是「重放按键」——simulateKeyboardTap 走宿主原生模块的系统级注入
+// （Windows 下是 SendInput），该注入会经过系统 IME/TSF 管线，
+// 因此首字母能与后续字母一起正常进入中文组字候选。
+function forwardCharToSubInput(e: KeyboardEvent) {
+    // 阻止列表自身的默认处理（避免字符被当作搜索关键词本地追加）
+    e.preventDefault();
+    const tap = toHostTapKey(e.key);
+    // 记录本次转发的按键：用于识别宿主回送的同一个按键，避免死循环
+    lastForwardKey = e.key;
+    lastForwardTime = Date.now();
+    // 先把焦点交还子输入框，等宿主完成 focus 后再重放按键
+    window.ztools.subInputFocus();
+    window.setTimeout(() => {
+        if (!tap) {
+            // 无法映射的字符（如非美式布局产生的符号）退化为直接写值，至少不丢字符
+            const value = (keyword.value + e.key).slice(0, 200);
+            window.ztools.setSubInputValue(value);
+            keyword.value = value;
+            return;
+        }
+        if (tap.shift) window.ztools.simulateKeyboardTap(tap.key, "shift");
+        else window.ztools.simulateKeyboardTap(tap.key);
+    }, FOCUS_HANDOFF_DELAY);
+}
+
+// 该按键是否刚刚由本组件转发出去（即可能是宿主回送的同一个按键）
+function isEchoOfForwardedKey(e: KeyboardEvent) {
+    return (
+        e.key === lastForwardKey &&
+        Date.now() - lastForwardTime < FORWARD_COOLDOWN
+    );
+}
+
+// 进入时让列表获得焦点：↑↓/Home/End/Enter 等导航键直接可用，
+// 需要输入文字时按任意可打印字符即把焦点切回子输入框（见 forwardCharToSubInput）。
 onMounted(() => {
     window.ztools.subInputBlur();
     nextTick(() => {
@@ -163,6 +239,12 @@ function shouldIgnoreDuplicatedKey(e: KeyboardEvent) {
 }
 
 function onKeydown(e: KeyboardEvent) {
+    // 本组件刚转发出去、又被宿主回送的同一个按键：吞掉，避免再次转发造成死循环
+    if (e.key.length === 1 && isEchoOfForwardedKey(e)) {
+        e.preventDefault();
+        return;
+    }
+
     // 先执行附加的 keydown 处理（如 F5 刷新、回车搜索），若其已消费该按键则不再处理
     props.extraKeydown?.(e);
     if (e.defaultPrevented) return;
@@ -185,13 +267,17 @@ function onKeydown(e: KeyboardEvent) {
             onEnter();
             break;
         case "Backspace":
-            e.preventDefault();
-            {
-                const value = keyword.value.slice(0, -1);
-                window.ztools.setSubInputValue(value);
-                keyword.value = value;
-                selectedIndex.value = 0;
+            // 焦点在宿主子输入框时由宿主自行删除并通过 onChange 回传，这里不重复写入（避免打断输入法组字）
+            if (hasListFocus()) {
+                e.preventDefault();
                 window.ztools.subInputFocus();
+                // 已经没有任何字符可删时不必再写值：写值会重置子输入框、打断输入法状态
+                if (keyword.value) {
+                    const value = keyword.value.slice(0, -1);
+                    window.ztools.setSubInputValue(value);
+                    keyword.value = value;
+                }
+                selectedIndex.value = 0;
             }
             break;
         case "Home":
@@ -205,13 +291,11 @@ function onKeydown(e: KeyboardEvent) {
             moveToLast();
             break;
         default:
-            // 主应用获得焦点时，把可打印字符写回子输入框
-            if (e.key.length === 1) {
-                e.preventDefault();
-                const value = (keyword.value + e.key).slice(0, 200);
-                window.ztools.setSubInputValue(value);
-                keyword.value = value;
-                selectedIndex.value = 0;
+            // 焦点在列表时按下可打印字符：把焦点交还子输入框，
+            // 并通过重放按键让该字符经过输入法（否则中文首字母会丢失）
+            if (e.key.length === 1 && hasListFocus()) {
+                forwardCharToSubInput(e);
+                return;
             }
             window.ztools.subInputFocus();
             break;
